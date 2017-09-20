@@ -2,6 +2,7 @@ package com.example.saint.hophacksthesequel;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -30,7 +31,10 @@ import org.apache.http.params.HttpParams;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -74,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.BdownloadImage:
+                new DownloadImage(ETdownloadImage.getText().toString()).execute();
                 break;
         }
 
@@ -110,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             data.add(new BasicNameValuePair("image",encodedImage));
 
             HttpClient client = new DefaultHttpClient(getHttpParams());
-            HttpPost post = new HttpPost(SERVER + "www");
+            HttpPost post = new HttpPost(SERVER + "uploadImage");
 
             try {
                 Log.e("x", "x");
@@ -133,6 +138,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             super.onPostExecute(aVoid);
             Toast.makeText(getApplicationContext(), "Image Uploaded", Toast.LENGTH_LONG).show();
         }
+    }
+
+    private class DownloadImage extends AsyncTask<Void, Void, Bitmap>
+    {
+        String name;
+
+        public DownloadImage(String name)
+        {
+            this.name = name;
+        }
+
+        @Override
+        protected Bitmap doInBackground(Void... params) {
+            String url = SERVER + "getImage?name=" + name;
+            try {
+                URLConnection connection = new URL(url).openConnection();
+                connection.setConnectTimeout(1000 * 30);
+                connection.setReadTimeout(1000 * 30);
+                return BitmapFactory.decodeStream((InputStream) connection.getContent(), null, null);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            if(bitmap != null)
+            {
+                IVdownloadImage.setImageBitmap(bitmap);
+            }
+        }
+
+
     }
 
     private HttpParams getHttpParams()
